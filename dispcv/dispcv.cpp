@@ -55,7 +55,7 @@ void write_ucmatrix(int size_x, int size_y, uchar** ucmatrix, const char* filena
 	}
 }
 
-void Negative(int Col, int Row, uchar** img, uchar** Result) {
+void Negative(int Col, int Row, uchar** img, uchar** Result) { // 밝기 반전 함수
 	int i, j;
 	for (i = 0; i < Row; i++)
 		for (j = 0; j < Col; j++)
