@@ -55,12 +55,6 @@ void write_ucmatrix(int size_x, int size_y, uchar** ucmatrix, const char* filena
 	}
 }
 
-void Negative(int Col, int Row, uchar** img, uchar** Result) { // 밝기 반전 함수
-	int i, j;
-	for (i = 0; i < Row; i++)
-		for (j = 0; j < Col; j++)
-			Result[i][j] = 255 - img[i][j];
-}
 
 void mozaiq(int col, int row, uchar** img, uchar** result) {
 	int sum = 0;
@@ -68,8 +62,12 @@ void mozaiq(int col, int row, uchar** img, uchar** result) {
 	int ratio;
 	printf("모자이크 비율을 입력하세요 >");
 	scanf_s("%d", &ratio);  // 모자이크를 할 비율을 입력. 4를 입력할 경우 4픽셀*4픽셀 범위가 하나의 값으로 통일됨
-	if (ratio < 2) // 모자이크 비율이 2보다 작은 값을 입력할 경우 모자이크 하지 않음
+	if (ratio < 2) { // 모자이크 비율이 2보다 작은 값을 입력할 경우 모자이크 하지 않음
+		for (i = 0; i < row; i++)
+			for (j = 0; j < col; j++)
+				result[i][j] = img[i][j];
 		return;
+	}
 	for (i = 0; i < col; i+=ratio) { // column에 대해 작업
 		if (col - i < ratio)  // 남은 공간이 ratio보다 작을 경우 스킵
 			break;
@@ -106,7 +104,7 @@ int main(int argc, char* argv[])
 	read_ucmatrix(Col, Row, img, argv[1]);
 
 //	mozaiq(Col, Row, img, result);
-	Negative(Row, Col, img,result); 
+//	Negative(Row, Col, img,result); 
 
 
 
@@ -116,7 +114,7 @@ int main(int argc, char* argv[])
 	for(i=0;i<Row;i++)
 		for (j = 0; j < Col; j++) {
 			//(cvImg.data+cvImg.step*i)[j]=img[i][j];
-			cvImg.at<uchar>(i, j) = result[i][j];
+			cvImg.at<uchar>(i, j) = img[i][j];
 		}
 	namedWindow(argv[1], WINDOW_AUTOSIZE); // 창 세팅
 	imshow(argv[1], cvImg);	// 최종 출력
