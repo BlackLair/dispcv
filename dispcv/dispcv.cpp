@@ -1,5 +1,8 @@
 ﻿#include <stdio.h>
 #include <opencv2/opencv.hpp>
+
+#pragma warning(disable:4996)
+
 typedef unsigned char uchar;
 
 using namespace std;
