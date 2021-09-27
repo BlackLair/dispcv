@@ -18,5 +18,8 @@
     <ClCompile Include="mozaiq.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="blur.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

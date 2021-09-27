@@ -7,6 +7,8 @@
 
 typedef unsigned char uchar;
 
+void blur(uchar**, uchar**, int, int, int);
+
 uchar** uc_alloc(int size_x, int size_y) {
 	uchar** m;
 	int i;
@@ -107,8 +109,8 @@ int main(int argc, char* argv[]) {
 	Result = uc_alloc(Col, Row);
 
 	read_ucmatrix(Col, Row, img, argv[1]);
-
-	printf("모자이크 비율을 입력하세요 >");
+	
+	printf("모자이크 비율을 입력하세요. ( 1 : 블러   2 ~ %d : 모자이크\n> ", Col);
 	scanf_s("%d", &Block);
 	if (Block > Row || Block > Col) {
 		printf("모자이크 비율이 너무 큽니다.\n");
@@ -118,8 +120,15 @@ int main(int argc, char* argv[]) {
 		printf("모자이크 비율이 너무 작습니다.\n");
 		exit(-1);
 	}
-	printf("모자이크 비율 : %d\n", Block);
-	mozaiq(img, Result, Row, Col, Block);
+	if (Block != 1) {
+		printf("모자이크 비율 : %d\n", Block);
+		mozaiq(img, Result, Row, Col, Block);
+	}
+	else {
+		printf("블러처리 정도를 입력하세요. > ");
+		scanf_s("%d", &Block);
+		blur(img, Result, Row, Col, Block);
+	}
 	write_ucmatrix(Col, Row, Result, argv[4]);
 
 	uc_free(Col, Row, img);
