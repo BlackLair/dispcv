@@ -13,12 +13,12 @@ uchar** uc_alloc(int size_x, int size_y) {
 
 	if ((m = (uchar**)calloc(size_y, sizeof(uchar*))) == NULL) {
 		printf("d_alloc error 1\n");
-		exit(0);
+		exit(-1);
 	}
 	for (i = 0; i < size_y; i++) {
 		if ((m[i] = (uchar*)calloc(size_x, sizeof(uchar))) == NULL) {
 			printf("d_alloc error 2\n");
-			exit(0);
+			exit(-1);
 		}
 	}
 	return m;
@@ -37,12 +37,12 @@ void read_ucmatrix(int size_x, int size_y, uchar** ucmatrix, const char* filenam
 
 	if ((f = fopen(filename, "rb")) == NULL) { // read binary
 		printf("%s File open Error!\n", filename);
-		exit(0);
+		exit(-1);
 	}
 	for (i = 0; i < size_y; i++) {
 		if (fread(ucmatrix[i], sizeof(uchar), size_x, f) != size_x) { // 파일을 읽어 ucmatrix에 저장
 			printf("Data Read Error!\n");
-			exit(0);
+			exit(-1);
 		}
 	}
 	fclose(f);
@@ -54,12 +54,12 @@ void write_ucmatrix(int size_x, int size_y, uchar** ucmatrix, const char* filena
 
 	if ((f = fopen(filename, "wb")) == NULL) { // write binary
 		printf("%s File open Error!\n", filename);
-		exit(0);
+		exit(-1);
 	}
 	for (i = 0; i < size_y; i++) { // 파일에 데이터 쓰기
 		if (fwrite(ucmatrix[i], sizeof(uchar), size_x, f) != size_x) { // 한 번에 한 줄씩 작성
 			printf("Data Write Error!\n");
-			exit(0);
+			exit(-1);
 		}
 	}
 }
@@ -112,11 +112,11 @@ int main(int argc, char* argv[]) {
 	scanf_s("%d", &Block);
 	if (Block > Row || Block > Col) {
 		printf("모자이크 비율이 너무 큽니다.\n");
-		exit(0);
+		exit(-1);
 	}
 	else if (Block < 1) {
 		printf("모자이크 비율이 너무 작습니다.\n");
-		exit(0);
+		exit(-1);
 	}
 	printf("모자이크 비율 : %d\n", Block);
 	mozaiq(img, Result, Row, Col, Block);

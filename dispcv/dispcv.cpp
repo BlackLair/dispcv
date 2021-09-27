@@ -15,12 +15,12 @@ uchar** uc_alloc(int size_x, int size_y) // uchar x*y 크기의 메모리를 할
 
 	if ((m = (uchar**)calloc(size_y, sizeof(uchar*))) == NULL) {
 		printf("d_alloc error 1\n");
-		exit(0);
+		exit(-1);
 	}
 	for (i = 0; i < size_y; i++) {
 		if ((m[i] = (uchar*)calloc(size_x, sizeof(uchar))) == NULL) {
 			printf("d_alloc error 2\n");
-			exit(0);
+			exit(-1);
 		}
 	}
 	return m;
@@ -31,12 +31,12 @@ void read_ucmatrix(int size_x, int size_y, uchar** ucmatrix, const char* filenam
 
 	if ((f = fopen(filename, "rb")) == NULL) { // read binary
 		printf("%s File open Error!\n", filename);
-		exit(0);
+		exit(-1);
 	}
 	for (i = 0; i < size_y; i++) {
 		if (fread(ucmatrix[i], sizeof(uchar), size_x, f) != size_x) { // 파일을 읽어 ucmatrix에 저장
 			printf("Data Read Error!\n");
-			exit(0);
+			exit(-1);
 		}
 	}
 	fclose(f);
@@ -48,12 +48,12 @@ void write_ucmatrix(int size_x, int size_y, uchar** ucmatrix, const char* filena
 
 	if ((f = fopen(filename, "wb")) == NULL) { // write binary
 		printf("%s File open Error!\n", filename);
-		exit(0);
+		exit(-1);
 	}
 	for (i = 0; i < size_y; i++) { // 파일에 데이터 쓰기
 		if (fwrite(ucmatrix[i], sizeof(uchar), size_x, f) != size_x) { // 한 번에 한 줄씩 작성
 			printf("Data Write Error!\n");
-			exit(0);
+			exit(-1);
 		}
 	}
 }
@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
 	uchar** img, **result;
 	if (argc != 4) {
 		printf("Exe imgData x_size y_size\n");
-		exit(0);
+		exit(-1);
 	}
 
 	Col = atoi(argv[2]); // ascii to integer
