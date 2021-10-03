@@ -59,37 +59,6 @@ void write_ucmatrix(int size_x, int size_y, uchar** ucmatrix, const char* filena
 }
 
 
-void mozaiq(int col, int row, uchar** img, uchar** result) {
-	int sum = 0;
-	int i, j, k, l;
-	int ratio;
-	printf("모자이크 비율을 입력하세요 >");
-	scanf_s("%d", &ratio);  // 모자이크를 할 비율을 입력. 4를 입력할 경우 4픽셀*4픽셀 범위가 하나의 값으로 통일됨
-	if (ratio < 2) { // 모자이크 비율이 2보다 작은 값을 입력할 경우 모자이크 하지 않음
-		for (i = 0; i < row; i++)
-			for (j = 0; j < col; j++)
-				result[i][j] = img[i][j];
-		return;
-	}
-	for (i = 0; i < col; i+=ratio) { // column에 대해 작업
-		if (col - i < ratio)  // 남은 공간이 ratio보다 작을 경우 스킵
-			break;
-		for (j = 0; j < row; j+=ratio) { //  row에 대해 작업
-			if (row - j < ratio) // 남은 공간이 ratio보다 작을 경우 스킵
-				break;
-			for (k = 0; k < ratio; k++)// ratio * ratio 범위의 총합을 구함 ( img[i][j]를 좌측 상단 꼭짓점으로 하는 정사각형 범위 )
-				for (l = 0; l < ratio; l++)
-					sum += img[i+k][j+l]; 
-			sum = sum / (ratio*ratio);   // ratio * ratio 범위의 평균치를 구함
-			if (sum > 255)	// 밝기 최대치를 넘길 경우 한계점으로 설정
-				sum = 255;
-			for (k = 0; k < ratio; k++)  // 평균치를 구했던 정사각형 구간의 모든 값을 평균치로 치환
-				for (l = 0; l < ratio; l++)
-					result[i+k][j+l] = sum;  
-		}
-	}
-
-}
 
 int main(int argc, char* argv[])
 {
