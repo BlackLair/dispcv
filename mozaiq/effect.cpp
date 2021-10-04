@@ -65,6 +65,18 @@ void write_ucmatrix(int size_x, int size_y, uchar** ucmatrix, const char* filena
 		}
 	}
 }
+/****************************Sub Func**********************************/
+double average(uchar** img, int Row, int Col) { // 이미지 전체 픽셀들의 평균값 반환
+	int i, j, sum = 0;
+	double avg;
+	for (i = 0; i < Row; i++) {
+		for (j = 0; j < Col; j++) {
+			sum += img[i][j];
+		}
+	}
+	avg = sum / (Row * Col);
+	return avg;
+}
 /***************************Effect Func*************************************/
 void Negative(int Col, int Row, uchar** img, uchar** Result) { // 밝기 반전 함수
 	int i, j;
@@ -118,7 +130,15 @@ void blur(uchar** img, uchar** out, int Row, int Col, int ratio) {
 		}
 	}
 }
-
+void makeBinary(uchar** img, uchar** out, int Row, int Col, double avg) {
+	int i, j;
+	for (i = 0; i < Row; i++) {
+		for (j = 0; j < Col; j++) {
+			if (img[i][j] > avg) out[i][j] = 255;
+			else out[i][j] = 0;
+		}
+	}
+}
 /********************************Main******************************/
 int main(int argc, char* argv[]) {
 	int sel;
@@ -138,7 +158,7 @@ int main(int argc, char* argv[]) {
 
 	read_ucmatrix(Col, Row, img, argv[1]);
 	printf("적용할 효과를 선택하세요.\n");
-	printf("1. Negative\n2. Mosaic\n3. Blur\n");
+	printf("1. Negative\n2. Mosaic\n3. Blur\n4. makeBinary\n");
 	scanf_s("%d", &sel);
 	switch (sel) {
 	case 1:
@@ -171,6 +191,11 @@ int main(int argc, char* argv[]) {
 			blur(img, Result, Row, Col, sel);
 			printf("작업 종료\n");
 		}
+		break;
+	case 4:
+		printf("makeBinary(이진파일화) 시작.\n");
+		makeBinary(img, Result, Row, Col, average(img, Row, Col));
+		printf("작업 종료\n");
 		break;
 	}
 		
