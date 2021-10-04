@@ -7,8 +7,8 @@
 
 typedef unsigned char uchar;
 
-void blur(uchar**, uchar**, int, int, int);
 
+/*********************Standard Func*******************************/
 uchar** uc_alloc(int size_x, int size_y) {
 	uchar** m;
 	int i;
@@ -65,6 +65,13 @@ void write_ucmatrix(int size_x, int size_y, uchar** ucmatrix, const char* filena
 		}
 	}
 }
+/***************************Effect Func*************************************/
+void Negative(int Col, int Row, uchar** img, uchar** Result) { // 밝기 반전 함수
+	int i, j;
+	for (i = 0; i < Row; i++)
+		for (j = 0; j < Col; j++)
+			Result[i][j] = 255 - img[i][j];
+}
 
 void mozaiq(uchar** img, uchar** out, int Row, int Col, int Block) {
 	int i, j, x, y;
@@ -92,8 +99,29 @@ void mozaiq(uchar** img, uchar** out, int Row, int Col, int Block) {
 	}
 }
 
+void blur(uchar** img, uchar** out, int Row, int Col, int ratio) {
+	int i, j, x, y;
+	int tmp = 0, cnt = 0;
+	for (i = 0; i < Row; i++) { // 행에 대하여 반복
+		for (j = 0; j < Col; j++) { // 열에 대하여 반복
+			for (y = i - ratio; y <= i + ratio; y++) { // 대상 픽셀 좌상단부터 열에 대하여 반복
+				for (x = j - ratio; x <= j + ratio; x++) { // 대상 픽셀 좌상단부터 행에 대하여 반복
+					if (x >= 0 && y >= 0 && x < Col && y < Row) { // 이미지 범위를 넘지 않는 부분만 접근
+						tmp += img[y][x]; // 대상 픽셀 주변 지정범위만큼의 값들을 모두 더함
+						cnt++;
+					}
+				}
+			}
+			out[i][j] = (int)tmp / cnt; // 대상 픽셀의 값을 주변 지정범위 값들의 평균으로 치환
+			tmp = 0;
+			cnt = 0;
+		}
+	}
+}
+
+/********************************Main******************************/
 int main(int argc, char* argv[]) {
-	int Block;
+	int sel;
 	int Col, Row;
 	uchar** img, ** Result;
 
@@ -109,26 +137,45 @@ int main(int argc, char* argv[]) {
 	Result = uc_alloc(Col, Row);
 
 	read_ucmatrix(Col, Row, img, argv[1]);
+	printf("적용할 효과를 선택하세요.\n");
+	printf("1. Negative\n2. Mosaic\n3. Blur");
+	scanf_s("%d", &sel);
+	switch (sel) {
+	case 1:
+		printf("Negative(밝기 반전) 시작\n");
+		Negative(Col, Row, img, Result);
+		printf("작업 종료\n");
+		break;
+	case 2:
+		printf("모자이크 비율을 입력하세요. ( 2 ~ %d )\n", Col);
+		scanf_s("%d", &sel);
+		if (sel<2 || sel>Col) {
+			printf("범위를 벗어났습니다.\n");
+			exit(0);
+		}
+		else {
+			printf("Mosaic(모자이크) 시작.(블록 크기 : %d\n", sel);
+			mozaiq(img, Result, Row, Col, sel);
+			printf("작업 종료\n");
+		}
+		break;
+	case 3:
+		printf("블러 처리 강도를 입력하세요. ( 2 ~ %d)\n", Col);
+		scanf_s("%d", &sel);
+		if (sel<2 || sel>Col) {
+			printf("범위를 벗어났습니다.\n");
+			exit(0);
+		}
+		else {
+			printf("Blur(블러) 시작.(블러 강도 : %d\n", sel);
+			blur(img, Result, Row, Col, sel);
+			printf("작업 종료\n");
+		}
+		break;
+	}
+		
 	
-	printf("모자이크 비율을 입력하세요. ( 1 : 블러   2 ~ %d : 모자이크\n> ", Col);
-	scanf_s("%d", &Block);
-	if (Block > Row || Block > Col) {
-		printf("모자이크 비율이 너무 큽니다.\n");
-		exit(-1);
-	}
-	else if (Block < 1) {
-		printf("모자이크 비율이 너무 작습니다.\n");
-		exit(-1);
-	}
-	if (Block != 1) {
-		printf("모자이크 비율 : %d\n", Block);
-		mozaiq(img, Result, Row, Col, Block);
-	}
-	else {
-		printf("블러처리 정도를 입력하세요. > ");
-		scanf_s("%d", &Block);
-		blur(img, Result, Row, Col, Block);
-	}
+	
 	write_ucmatrix(Col, Row, Result, argv[4]);
 
 	uc_free(Col, Row, img);

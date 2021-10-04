@@ -5,9 +5,7 @@ VisualStudioVersion = 16.0.31624.102
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dispcv", "dispcv\dispcv.vcxproj", "{D61BE352-1634-4AE4-A4FC-240398EC7BF7}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "negative", "negative\negative.vcxproj", "{D4D55D8F-5AA0-4AED-B182-97A5A2A89649}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mozaiq", "mozaiq\mozaiq.vcxproj", "{B46AB87D-4973-4736-AB0D-98121C1B557C}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "effect", "mozaiq\mozaiq.vcxproj", "{B46AB87D-4973-4736-AB0D-98121C1B557C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -25,14 +23,6 @@ Global
 		{D61BE352-1634-4AE4-A4FC-240398EC7BF7}.Release|x64.Build.0 = Release|x64
 		{D61BE352-1634-4AE4-A4FC-240398EC7BF7}.Release|x86.ActiveCfg = Release|Win32
 		{D61BE352-1634-4AE4-A4FC-240398EC7BF7}.Release|x86.Build.0 = Release|Win32
-		{D4D55D8F-5AA0-4AED-B182-97A5A2A89649}.Debug|x64.ActiveCfg = Debug|x64
-		{D4D55D8F-5AA0-4AED-B182-97A5A2A89649}.Debug|x64.Build.0 = Debug|x64
-		{D4D55D8F-5AA0-4AED-B182-97A5A2A89649}.Debug|x86.ActiveCfg = Debug|Win32
-		{D4D55D8F-5AA0-4AED-B182-97A5A2A89649}.Debug|x86.Build.0 = Debug|Win32
-		{D4D55D8F-5AA0-4AED-B182-97A5A2A89649}.Release|x64.ActiveCfg = Release|x64
-		{D4D55D8F-5AA0-4AED-B182-97A5A2A89649}.Release|x64.Build.0 = Release|x64
-		{D4D55D8F-5AA0-4AED-B182-97A5A2A89649}.Release|x86.ActiveCfg = Release|Win32
-		{D4D55D8F-5AA0-4AED-B182-97A5A2A89649}.Release|x86.Build.0 = Release|Win32
 		{B46AB87D-4973-4736-AB0D-98121C1B557C}.Debug|x64.ActiveCfg = Debug|x64
 		{B46AB87D-4973-4736-AB0D-98121C1B557C}.Debug|x64.Build.0 = Debug|x64
 		{B46AB87D-4973-4736-AB0D-98121C1B557C}.Debug|x86.ActiveCfg = Debug|Win32
