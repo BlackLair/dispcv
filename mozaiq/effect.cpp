@@ -138,7 +138,7 @@ int main(int argc, char* argv[]) {
 
 	read_ucmatrix(Col, Row, img, argv[1]);
 	printf("적용할 효과를 선택하세요.\n");
-	printf("1. Negative\n2. Mosaic\n3. Blur");
+	printf("1. Negative\n2. Mosaic\n3. Blur\n");
 	scanf_s("%d", &sel);
 	switch (sel) {
 	case 1:
