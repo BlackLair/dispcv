@@ -75,10 +75,6 @@ int main(int argc, char* argv[])
 	result = uc_alloc(Col, Row);
 	read_ucmatrix(Col, Row, img, argv[1]);
 
-//	mozaiq(Col, Row, img, result);
-//	Negative(Row, Col, img,result); 
-
-
 
 	//////////// 화면에 이미지 띄우는 과정 /////////////////////
 	Mat cvImg(Row, Col, CV_8UC(1)); 
