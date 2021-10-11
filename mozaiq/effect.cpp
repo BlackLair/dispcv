@@ -215,20 +215,20 @@ int main(int argc, char* argv[]) {
 			exit(0);
 		}
 		else {
-			printf("Mosaic(모자이크) 시작.(블록 크기 : %d)\n", sel);
+			printf("Mosaic(모자이크) 시작.( 블록 크기 : %d )\n", sel);
 			mozaiq(img, Result, Row, Col, sel);
 			printf("작업 종료\n");
 		}
 		break;
 	case 3:
-		printf("블러 처리 강도를 입력하세요. ( 2 ~ %d)\n", Col);
+		printf("블러 처리 강도를 입력하세요. ( 2 ~ %d )\n", Col);
 		scanf_s("%d", &sel);
 		if (sel<2 || sel>Col) {
 			printf("범위를 벗어났습니다.\n");
 			exit(0);
 		}
 		else {
-			printf("Blur(블러) 시작.(블러 강도 : %d\n", sel);
+			printf("Blur(블러) 시작.( 블러 강도 : %d )\n", sel);
 			blur(img, Result, Row, Col, sel);
 			printf("작업 종료\n");
 		}
