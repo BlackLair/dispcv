@@ -139,34 +139,34 @@ void makeBinary(uchar** img, uchar** out, int Row, int Col, double avg) {
 		}
 	}
 }
-void AdaptiveBinary0(uchar** img, uchar** out, int Row, int Col) {
+void AdaptiveBinary0(uchar** img, uchar** out, int Row, int Col) { // 밝기범위 내 200 치환, 나머지 0
 	int i, j;
 	for (i = 0; i < Row; i++) {
 		for (j = 0; j < Col; j++) {
-			if (img[i][j] > 50 && img[i][j] < 100) out[i][j] = 200;
+			if (img[i][j] > 50 && img[i][j] < 150) out[i][j] = 200;
 			else out[i][j] = 0;
 		}
 	}
 }
-void AdaptiveBinary1(uchar** img, uchar** out, int Row, int Col) {
+void AdaptiveBinary1(uchar** img, uchar** out, int Row, int Col) { // 밝기범위 내 200 치환 나머지 원본 유지
 	int i, j;
 	for (i = 0; i < Row; i++) {
 		for (j = 0; j < Col; j++) {
-			if (img[i][j] > 50 && img[i][j] < 100) out[i][j] = 200;
+			if (img[i][j] > 50 && img[i][j] < 150) out[i][j] = 200;
 			else out[i][j] = img[i][j];
 		}
 	}
 }
-void AdaptiveBinary2(uchar** img, uchar** out, int Row, int Col) {
+void AdaptiveBinary2(uchar** img, uchar** out, int Row, int Col) { // 밝기범위 내 원본 유지 나머지 0
 	int i, j;
 	for (i = 0; i < Row; i++) {
 		for (j = 0; j < Col; j++) {
-			if (img[i][j] > 50 && img[i][j] < 100) out[i][j] = img[i][j];
+			if (img[i][j] > 50 && img[i][j] < 150) out[i][j] = img[i][j];
 			else out[i][j] = 0;
 		}
 	}
 }
-void PowImg(uchar** img, uchar** Result, int Row, int Col, double gamma) {
+void PowImg(uchar** img, uchar** Result, int Row, int Col, double gamma) { // 이미지 감마 조절
 	int i, j;
 	double tmp;
 	for (i = 0; i < Row; i++) {
@@ -183,6 +183,7 @@ int main(int argc, char* argv[]) {
 	int sel;
 	int Col, Row;
 	uchar** img, ** Result;
+	double value;
 
 	if (argc != 5) {
 		fprintf(stderr, "\n %s InputImg x-size y-size ResultImg!!\n", argv[0]);
@@ -197,7 +198,8 @@ int main(int argc, char* argv[]) {
 
 	read_ucmatrix(Col, Row, img, argv[1]);
 	printf("적용할 효과를 선택하세요.\n");
-	printf("1. Negative\n2. Mosaic\n3. Blur\n4. makeBinary\n");
+	printf("1. Negative\n2. Mosaic\n3. Blur\n4. makeBinary\n5. AdaptiveBinary\n");
+	printf("6. PowImg\n");
 	scanf_s("%d", &sel);
 	switch (sel) {
 	case 1:
@@ -213,7 +215,7 @@ int main(int argc, char* argv[]) {
 			exit(0);
 		}
 		else {
-			printf("Mosaic(모자이크) 시작.(블록 크기 : %d\n", sel);
+			printf("Mosaic(모자이크) 시작.(블록 크기 : %d)\n", sel);
 			mozaiq(img, Result, Row, Col, sel);
 			printf("작업 종료\n");
 		}
@@ -236,6 +238,39 @@ int main(int argc, char* argv[]) {
 		makeBinary(img, Result, Row, Col, average(img, Row, Col));
 		printf("작업 종료\n");
 		break;
+	case 5:
+		printf("변환 방식을 선택하세요. ( 밝기 범위 : 50 ~ 150 )\n");
+		printf("1. 밝기 범위 내 200으로 치환, 나머지 0으로 치환\n");
+		printf("2. 밝기 범위 내 200으로 치환, 나머지 원본 유지\n");
+		printf("3. 밝기 범위 내 원본 유지, 나머지 0 치환\n");
+		scanf_s("%d", &sel);
+		switch (sel) {
+			printf("%d번 선택. AdaptiveBinary(적응적 변환) 시작\n", sel);
+		case 1:
+			AdaptiveBinary0(img, Result, Row, Col);
+			break;
+		case 2:
+			AdaptiveBinary1(img, Result, Row, Col);
+			break;
+		case 3:
+			AdaptiveBinary2(img, Result, Row, Col);
+			break;
+		default:
+			printf("없는 선택지입니다. 프로그램 종료\n");
+			exit(0);
+		}
+		printf("작업 종료\n");
+		break;
+	case 6:
+		printf("조정할 감마 값을 입력하세요.\n");
+		scanf_s("%lf", &value);
+		printf("PowImg(Gamma Correction) 시작.( 감마 값 : %lf )\n", value);
+		PowImg(img, Result, Row, Col, value);
+		printf("작업 종료\n");
+		break;
+	default:
+		printf("없는 선택지입니다. 프로그램 종료\n");
+		exit(0);
 	}
 		
 	
