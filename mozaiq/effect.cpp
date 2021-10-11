@@ -134,8 +134,47 @@ void makeBinary(uchar** img, uchar** out, int Row, int Col, double avg) {
 	int i, j;
 	for (i = 0; i < Row; i++) {
 		for (j = 0; j < Col; j++) {
-			if (img[i][j] > avg) out[i][j] = 255;
+			if (img[i][j] > avg) out[i][j] = 255;	// 원본 이미지의 픽셀 밝기가 평균보다 크면 최대값으로 치환
+			else out[i][j] = 0;						// 평균보다 작으면 0으로 치환
+		}
+	}
+}
+void AdaptiveBinary0(uchar** img, uchar** out, int Row, int Col) {
+	int i, j;
+	for (i = 0; i < Row; i++) {
+		for (j = 0; j < Col; j++) {
+			if (img[i][j] > 50 && img[i][j] < 100) out[i][j] = 200;
 			else out[i][j] = 0;
+		}
+	}
+}
+void AdaptiveBinary1(uchar** img, uchar** out, int Row, int Col) {
+	int i, j;
+	for (i = 0; i < Row; i++) {
+		for (j = 0; j < Col; j++) {
+			if (img[i][j] > 50 && img[i][j] < 100) out[i][j] = 200;
+			else out[i][j] = img[i][j];
+		}
+	}
+}
+void AdaptiveBinary2(uchar** img, uchar** out, int Row, int Col) {
+	int i, j;
+	for (i = 0; i < Row; i++) {
+		for (j = 0; j < Col; j++) {
+			if (img[i][j] > 50 && img[i][j] < 100) out[i][j] = img[i][j];
+			else out[i][j] = 0;
+		}
+	}
+}
+void PowImg(uchar** img, uchar** Result, int Row, int Col, double gamma) {
+	int i, j;
+	double tmp;
+	for (i = 0; i < Row; i++) {
+		for (j = 0; j < Col; j++) {
+			tmp = pow(img[i][j] / 255., 1 / gamma); // 앞 수의 1/gamma제곱을 구하는 함수 pow
+			if (tmp * 255 > 255) tmp = 1.;	// 표현할 수 있는 밝기 범위 초과 시 값 치환
+			else if (tmp * 255 < 0) tmp = 0.;
+			Result[i][j] = tmp * 255;
 		}
 	}
 }
