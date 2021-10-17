@@ -2,6 +2,7 @@
 #include<stdlib.h>
 #include<math.h>
 #include<assert.h>
+#include<string.h>
 
 #pragma warning(disable:4996)
 
@@ -178,10 +179,33 @@ void PowImg(uchar** img, uchar** Result, int Row, int Col, double gamma) { // �
 		}
 	}
 }
+void BitSlicing(uchar** img, uchar** Result, int Row, int Col, const char* filename) {
+	int i, j, n;
+	char resultname[32]; // 결과 파일의 이름을 저장할 변수
+	char namenum[2];	// 결과 파일 이름 끝에 들어갈 숫자 저장 변수
+	uchar mask = 0x01;	// 각 비트 자리의 값을 판별하기 위한 mask 값
+	
+	for (n = 0; n < 8; n++) {
+		memset(resultname, NULL, 32); // 결과 파일 이름 변수 초기화
+		strcpy(resultname, filename); // 결과 파일의 이름 복사
+		for (i = 0; i < Row; i++) {
+			for (j = 0; j < Col; j++) {
+				if ((mask & img[i][j]) == pow(2, n)) // 뒤에서 n번째 비트가 1인지 판별
+					Result[i][j] = 255;
+				else Result[i][j] = 0;
+			}
+		}
+		strcat(resultname, itoa(n, namenum, 10));	// 결과 파일의 이름 맨 끝에 비트 번호 부여
+		write_ucmatrix(Col, Row, Result, resultname); // 결과 파일 쓰기
+		mask <<= 1;
+	}
+
+}
 /********************************Main******************************/
 int main(int argc, char* argv[]) {
 	int sel;
 	int Col, Row;
+	bool isEnded = false;
 	uchar** img, ** Result;
 	double value;
 
@@ -199,7 +223,7 @@ int main(int argc, char* argv[]) {
 	read_ucmatrix(Col, Row, img, argv[1]);
 	printf("적용할 효과를 선택하세요.\n");
 	printf("1. Negative\n2. Mosaic\n3. Blur\n4. makeBinary\n5. AdaptiveBinary\n");
-	printf("6. PowImg\n");
+	printf("6. PowImg\n7. BitSlicing\n");
 	scanf_s("%d", &sel);
 	switch (sel) {
 	case 1:
@@ -268,14 +292,20 @@ int main(int argc, char* argv[]) {
 		PowImg(img, Result, Row, Col, value);
 		printf("작업 종료\n");
 		break;
+	case 7:
+		printf("BitSlicing(비트 분리) 시작.\n");
+		BitSlicing(img, Result, Row, Col, argv[4]);
+		printf("작업 종료\n");
+		isEnded = true;
+		break;
 	default:
 		printf("없는 선택지입니다. 프로그램 종료\n");
 		exit(0);
 	}
 		
 	
-	
-	write_ucmatrix(Col, Row, Result, argv[4]);
+	if(!isEnded)
+		write_ucmatrix(Col, Row, Result, argv[4]);
 
 	uc_free(Col, Row, img);
 	uc_free(Col, Row, Result);
