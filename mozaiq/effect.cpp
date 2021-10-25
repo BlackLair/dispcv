@@ -78,6 +78,19 @@ double average(uchar** img, int Row, int Col) { // 이미지 전체 픽셀들의
 	avg = sum / (Row * Col);
 	return avg;
 }
+void Circle(uchar** Result, int Row, int Col, double diameter) {
+	int i, j;
+	double tmp, xSquare, ySquare;
+	for (i = 0; i < Row; i++) {
+		for (j = 0; j < Col; j++) {
+			ySquare = (Row / 2 - i) * (Row / 2 - i);
+			xSquare = (Col / 2 - j) * (Col / 2 - j);
+			tmp = sqrt(ySquare + xSquare);
+			if (tmp < diameter) Result[i][j] = 255;
+			else Result[i][j] = 0;
+		}
+	}
+}
 /***************************Effect Func*************************************/
 void Negative(int Col, int Row, uchar** img, uchar** Result) { // 밝기 반전 함수
 	int i, j;
@@ -201,6 +214,14 @@ void BitSlicing(uchar** img, uchar** Result, int Row, int Col, const char* filen
 	}
 
 }
+void MaskOr(uchar** in1Img, uchar** in2Img, uchar** outImg, int ROW, int COL) {
+	int i, j;
+	for (i = 0; i < ROW; i++) {
+		for (j = 0; j < COL; j++) {
+			outImg[i][j] = in1Img[i][j] | in2Img[i][j];
+		}
+	}
+}
 /********************************Main******************************/
 int main(int argc, char* argv[]) {
 	int sel;
@@ -223,7 +244,7 @@ int main(int argc, char* argv[]) {
 	read_ucmatrix(Col, Row, img, argv[1]);
 	printf("적용할 효과를 선택하세요.\n");
 	printf("1. Negative\n2. Mosaic\n3. Blur\n4. makeBinary\n5. AdaptiveBinary\n");
-	printf("6. PowImg\n7. BitSlicing\n");
+	printf("6. PowImg\n7. BitSlicing\n8. MaskOr\n");
 	scanf_s("%d", &sel);
 	switch (sel) {
 	case 1:
@@ -297,6 +318,14 @@ int main(int argc, char* argv[]) {
 		BitSlicing(img, Result, Row, Col, argv[4]);
 		printf("작업 종료\n");
 		isEnded = true;
+		break;
+	case 8:
+		printf("원의 반지름 값을 입력하세요.\n");
+		scanf_s("%lf", &value);
+		printf("MaksOr(or 연산) 시작.( 반지름 : %lf )\n", value);
+		Circle(Result, Row, Col, value);
+		MaskOr(img, Result, Result, Row, Col);
+		printf("작업 종료\n");
 		break;
 	default:
 		printf("없는 선택지입니다. 프로그램 종료\n");
