@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="effect.c">
+    <ClCompile Include="KJW_20160973.c">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>

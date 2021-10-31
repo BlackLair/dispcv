@@ -199,7 +199,7 @@ void BitSlicing(uchar** img, uchar** Result, int Row, int Col, const char* filen
 	uchar mask = 0x01;	// 각 비트 자리의 값을 판별하기 위한 mask 값
 	
 	for (n = 0; n < 8; n++) {
-		memset(resultname, NULL, 32); // 결과 파일 이름 변수 초기화
+		memset(resultname, '\0', 32); // 결과 파일 이름 변수 초기화
 		strcpy(resultname, filename); // 결과 파일의 이름 복사
 		for (i = 0; i < Row; i++) {
 			for (j = 0; j < Col; j++) {
@@ -226,7 +226,7 @@ void MaskOr(uchar** in1Img, uchar** in2Img, uchar** outImg, int ROW, int COL) {
 int main(int argc, char* argv[]) {
 	int sel;
 	int Col, Row;
-	bool isEnded = false;
+	int isEnded = 0;
 	uchar** img, ** Result;
 	double value;
 
@@ -245,7 +245,7 @@ int main(int argc, char* argv[]) {
 	printf("적용할 효과를 선택하세요.\n");
 	printf("1. Negative\n2. Mosaic\n3. Blur\n4. makeBinary\n5. AdaptiveBinary\n");
 	printf("6. PowImg\n7. BitSlicing\n8. MaskOr\n");
-	scanf_s("%d", &sel);
+	scanf("%d", &sel);
 	switch (sel) {
 	case 1:
 		printf("Negative(밝기 반전) 시작\n");
@@ -254,7 +254,7 @@ int main(int argc, char* argv[]) {
 		break;
 	case 2:
 		printf("모자이크 비율을 입력하세요. ( 2 ~ %d )\n", Col);
-		scanf_s("%d", &sel);
+		scanf("%d", &sel);
 		if (sel<2 || sel>Col) {
 			printf("범위를 벗어났습니다.\n");
 			exit(0);
@@ -267,7 +267,7 @@ int main(int argc, char* argv[]) {
 		break;
 	case 3:
 		printf("블러 처리 강도를 입력하세요. ( 2 ~ %d )\n", Col);
-		scanf_s("%d", &sel);
+		scanf("%d", &sel);
 		if (sel<2 || sel>Col) {
 			printf("범위를 벗어났습니다.\n");
 			exit(0);
@@ -288,16 +288,18 @@ int main(int argc, char* argv[]) {
 		printf("1. 밝기 범위 내 200으로 치환, 나머지 0으로 치환\n");
 		printf("2. 밝기 범위 내 200으로 치환, 나머지 원본 유지\n");
 		printf("3. 밝기 범위 내 원본 유지, 나머지 0 치환\n");
-		scanf_s("%d", &sel);
+		scanf("%d", &sel);
 		switch (sel) {
-			printf("%d번 선택. AdaptiveBinary(적응적 변환) 시작\n", sel);
 		case 1:
+			printf("%d번 선택. AdaptiveBinary(적응적 변환) 시작\n", sel);
 			AdaptiveBinary0(img, Result, Row, Col);
 			break;
 		case 2:
+			printf("%d번 선택. AdaptiveBinary(적응적 변환) 시작\n", sel);
 			AdaptiveBinary1(img, Result, Row, Col);
 			break;
 		case 3:
+			printf("%d번 선택. AdaptiveBinary(적응적 변환) 시작\n", sel);
 			AdaptiveBinary2(img, Result, Row, Col);
 			break;
 		default:
@@ -308,7 +310,7 @@ int main(int argc, char* argv[]) {
 		break;
 	case 6:
 		printf("조정할 감마 값을 입력하세요.\n");
-		scanf_s("%lf", &value);
+		scanf("%lf", &value);
 		printf("PowImg(Gamma Correction) 시작.( 감마 값 : %lf )\n", value);
 		PowImg(img, Result, Row, Col, value);
 		printf("작업 종료\n");
@@ -317,11 +319,11 @@ int main(int argc, char* argv[]) {
 		printf("BitSlicing(비트 분리) 시작.\n");
 		BitSlicing(img, Result, Row, Col, argv[4]);
 		printf("작업 종료\n");
-		isEnded = true;
+		isEnded = 1;
 		break;
 	case 8:
 		printf("원의 반지름 값을 입력하세요.\n");
-		scanf_s("%lf", &value);
+		scanf("%lf", &value);
 		printf("MaksOr(or 연산) 시작.( 반지름 : %lf )\n", value);
 		Circle(Result, Row, Col, value);
 		MaskOr(img, Result, Result, Row, Col);
