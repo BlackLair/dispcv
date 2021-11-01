@@ -214,11 +214,18 @@ int main(int argc, char* argv[]) {
 	Result = uc_alloc(Col, Row);
 	read_ucmatrix(Col, Row, img, argv[1]);
 	//////////////////////////////////////////////////////////////////////
-
+	/****************************print input parameter information******/
+	printf("Input Image name : %s    Output Image name : %s\n", argv[1], argv[2]);
+	printf("Size of input Image : %d", diameter);
+	printf("Center of Section Position : (Row:%d, Col:%d)\n", rowPos, colPos);
+	printf("Diameter of Section : %d\n", diameter);
+	//////////////////////////////////////////////////////////////////////
+	/********************************select effect***********************/
 	printf("Which effect do you want?\n");
 	printf("1. Negative\n2. Mosaic\n3. Blur\n4. makeBinary\n5. AdaptiveBinary\n");
-	printf("6. PowImg\n7. BitSlicing\n8. MaskOr\n");
+	printf("6. PowImg\n7. BitSlicing\n8. MaskOr\n>");
 	scanf("%d", &sel);
+	//////////////////////////////////////////////////////////////////////
 	switch (sel) {
 	case 1:
 		printf("You selected Negative.\n");
