@@ -81,7 +81,7 @@ int isInCircle(int i, int j, int rowPos, int colPos, int diameter) { // if(i, j)
 	else return 0;
 }
 int isInImage(int i, int j, int Row, int Col) { // if (i, j) is included in the input Image:return 1
-	if (i > 0 && j > 0 && i < Row && j < Col)	// else, return 0
+	if (i >= 0 && j >= 0 && i < Row && j < Col)	// else, return 0
 		return 1;
 	else
 		return 0;
@@ -110,12 +110,10 @@ void Negative(int Row, int Col, int rowPos, int colPos, int diameter, uchar** im
 	int i, j;
 	for (i = 0; i < Row; i++) {
 		for (j = 0; j < Col; j++) {
-			if (isInImage(i, j, Row, Col)) { // check (i, j) is included in image
-				if (isInCircle(i, j, rowPos, colPos, diameter)) // check (i, j) is included in the circle section
-					Result[i][j] = 255 - img[i][j];
-				else
-					Result[i][j] = img[i][j]; // keep original brightness outside of the circle section
-			}
+			if (isInCircle(i, j, rowPos, colPos, diameter)) // check (i, j) is included in the circle section
+				Result[i][j] = 255 - img[i][j];
+			else
+				Result[i][j] = img[i][j]; // keep original brightness outside of the circle section
 		}
 	}
 }
@@ -274,7 +272,6 @@ void BitSlicing(int Row, int Col, int rowPos, int colPos, int diameter, uchar** 
 		write_ucmatrix(Col, Row, Result, resultname); // write result file
 		mask <<= 1; // bit shift 1 bit left
 	}
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
