@@ -179,8 +179,61 @@ void makeBinary(int Row, int Col, int rowPos, int colPos, int diameter, double a
 		}
 	}
 }
-
-
+void AdaptiveBinary0(int Row, int Col, int rowPos, int colPos, int diameter, int min, int max, int threshold, uchar** img, uchar** Result) { 
+	int i, j;
+	for (i = 0; i < Row; i++) {
+		for (j = 0; j < Col; j++) {
+			if (isInCircle(i, j, rowPos, colPos, diameter)) {
+				if (img[i][j] > min && img[i][j] < max) Result[i][j] = threshold;
+				else Result[i][j] = 0;
+			}
+			else
+				Result[i][j] = img[i][j];
+		}
+	}
+}
+void AdaptiveBinary1(int Row, int Col, int rowPos, int colPos, int diameter, int min, int max, int threshold, uchar** img, uchar** Result) { 
+	int i, j;
+	for (i = 0; i < Row; i++) {
+		for (j = 0; j < Col; j++) {
+			if (isInCircle(i, j, rowPos, colPos, diameter)) {
+				if (img[i][j] > min && img[i][j] < max) Result[i][j] = threshold;
+				else Result[i][j] = img[i][j];
+			}
+			else
+				Result[i][j] = img[i][j];
+		}
+	}
+}
+void AdaptiveBinary2(int Row, int Col, int rowPos, int colPos, int diameter, int min, int max, int threshold, uchar** img, uchar** Result) { 
+	int i, j;
+	for (i = 0; i < Row; i++) {
+		for (j = 0; j < Col; j++) {
+			if (isInCircle(i, j, rowPos, colPos, diameter)) {
+				if (img[i][j] > min && img[i][j] < max) Result[i][j] = img[i][j];
+				else Result[i][j] = 0;
+			}
+			else
+				Result[i][j] = img[i][j];
+		}
+	}
+}
+void PowImg(int Row, int Col, int rowPos, int colPos, int diameter, uchar** img, uchar** Result, double gamma) { // 이미지 감마 조절
+	int i, j;
+	double tmp;
+	for (i = 0; i < Row; i++) {
+		for (j = 0; j < Col; j++) {
+			if (isInCircle(i, j, rowPos, colPos, diameter)) {
+				tmp = pow(img[i][j] / 255., 1 / gamma); // 앞 수의 1/gamma제곱을 구하는 함수 pow
+				if (tmp * 255 > 255) tmp = 1.;	// 표현할 수 있는 밝기 범위 초과 시 값 치환
+				else if (tmp * 255 < 0) tmp = 0.;
+				Result[i][j] = tmp * 255;
+			}
+			else
+				Result[i][j] = img[i][j];
+		}
+	}
+}
 
 
 
@@ -195,8 +248,9 @@ void makeBinary(int Row, int Col, int rowPos, int colPos, int diameter, double a
 int main(int argc, char* argv[]) {
 	uchar** img, ** Result;
 	int Col, Row, sel;
+	int min, max, threshold;
 	int Block_size, rowPos, colPos, diameter;
-	double avg;
+	double avg, gamma;
 	if (argc != 9) { // 
 		fprintf(stderr, "Input Form:\n%s inImage outImage COL ROW Block_size row_pos col_pos diameter\n", argv[0]);
 		exit(0);
@@ -215,10 +269,12 @@ int main(int argc, char* argv[]) {
 	read_ucmatrix(Col, Row, img, argv[1]);
 	//////////////////////////////////////////////////////////////////////
 	/****************************print input parameter information******/
+	printf("==========================mid_termDIP========================\n");
 	printf("Input Image name : %s    Output Image name : %s\n", argv[1], argv[2]);
-	printf("Size of input Image : %d", diameter);
-	printf("Center of Section Position : (Row:%d, Col:%d)\n", rowPos, colPos);
+	printf("Size of input Image : Row:%d Col:%d\n", Row, Col);
+	printf("Center of Section : (Row:%d, Col:%d)\n", rowPos, colPos);
 	printf("Diameter of Section : %d\n", diameter);
+	printf("=============================================================\n\n");
 	//////////////////////////////////////////////////////////////////////
 	/********************************select effect***********************/
 	printf("Which effect do you want?\n");
@@ -249,6 +305,57 @@ int main(int argc, char* argv[]) {
 		makeBinary(Row, Col, rowPos, colPos, diameter, avg, img, Result);
 		printf("makeBinary process finished.\n");
 		break;
+	case 5:
+		printf("You selected AdaptiveBinary.\n");
+		printf("Input brightness section. ( input Form : min max )\n>");
+		scanf("%d %d", &min, &max);
+		if (min > max) {
+			printf("invalid value...\n");
+			exit(0);
+		}
+		printf("Input threshold ( 0~255 ) \n");
+		scanf("%d", &threshold);
+		if (threshold > 255 || threshold < 0) {
+			printf("invalid value...\n");
+			exit(0);
+		}
+		printf("Select transform type.\n");
+		printf("1. Replace (%d~%d) to %d, Replace rest section to 0\n", min, max, threshold);
+		printf("2. Replace (%d~%d) to %d, Keep Rest section Original\n", min, max, threshold);
+		printf("3. Keep (%d~%d) Original, Replace rest section to 0\n>", min, max);
+		scanf("%d", &sel);
+		printf("=======================================\n");
+		printf("section Brightness min : %d max : %d\n", min, max);
+		printf("Threshold : %d\n", threshold);
+		printf("transform type : %d\n", sel);
+		printf("=======================================\n");
+		switch (sel) {
+		case 1:
+			AdaptiveBinary0(Row, Col, rowPos, colPos, diameter, min, max, threshold, img, Result);
+			printf("AdaptiveBinary process finished.\n");
+			break;
+		case 2:
+			AdaptiveBinary1(Row, Col, rowPos, colPos, diameter, min, max, threshold, img, Result);
+			printf("AdaptiveBinary process finished.\n");
+			break;
+		case 3:
+			AdaptiveBinary2(Row, Col, rowPos, colPos, diameter, min, max, threshold, img, Result);
+			printf("AdaptiveBinary process finished.\n");
+			break;
+		default:
+			printf("invalid seletion...\n");
+			exit(0);
+		}
+	case 6:
+		printf("You selected PowImg.\n");
+		printf("Input Gamma value.\n>");
+		scanf("%lf", &gamma);
+		PowImg(Row, Col, rowPos, colPos, diameter, img, Result, gamma);
+		printf("PowImg process finished.\n");
+		break;
+	case 7:
+		printf("You selected BitSlicing.\n");
+
 	}
 
 	write_ucmatrix(Col, Row, Result, argv[2]);
