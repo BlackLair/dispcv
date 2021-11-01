@@ -86,6 +86,20 @@ int isInImage(int i, int j, int Row, int Col) { // (i, j)가 이미지 크기 이내에 �
 	else
 		return 0;
 }
+double average(uchar** img, int Row, int Col, int rowPos, int colPos, int diameter) { // 이미지 전체 픽셀들의 평균값 반환
+	int i, j, sum = 0, cnt=0;
+	double avg;
+	for (i = rowPos-diameter; i <= rowPos+diameter; i++) { // 필요없는 연산 횟수를 줄임
+		for (j = colPos-diameter; j < colPos+diameter; j++) {
+			if (isInCircle(i, j, rowPos, colPos, diameter)) { // 지정 범위 원 이내의 평균값만 구한다.
+				sum += img[i][j];
+				cnt++;
+			}
+		}
+	}
+	avg = sum / cnt;
+	return avg;
+}
 /////////////////////////////////////////////////////////////////////////////////////
 /****************************************Effect Func*********************************/
 void Negative(int Row, int Col, int rowPos, int colPos, int diameter, uchar** img, uchar** Result) { // 밝기 반전 함수
@@ -130,8 +144,41 @@ void mosaic(int Row, int Col, int rowPos, int colPos, int diameter, int Block_si
 		}
 	}
 }
-
-
+void blur(int Row, int Col, int rowPos, int colPos, int diameter, int Block_size, uchar** img, uchar** Result) {
+	int i, j, x, y;
+	int tmp = 0, cnt = 0;
+	for (i = 0; i < Row; i++) { // 행에 대하여 반복
+		for (j = 0; j < Col; j++) { // 열에 대하여 반복
+			for (y = i - Block_size; y <= i + Block_size; y++) { // 대상 픽셀 좌상단부터 열에 대하여 반복
+				for (x = j - Block_size; x <= j + Block_size; x++) { // 대상 픽셀 좌상단부터 행에 대하여 반복
+					if (x >= 0 && y >= 0 && x < Col && y < Row) { // 이미지 범위를 넘지 않는 부분만 접근
+						tmp += img[y][x]; // 대상 픽셀 주변 지정범위만큼의 값들을 모두 더함
+						cnt++;
+					}
+				}
+			}
+			if (isInCircle(i, j, rowPos, colPos, diameter))
+				Result[i][j] = (int)tmp / cnt; // 대상 픽셀의 값을 주변 지정범위 값들의 평균으로 치환
+			else
+				Result[i][j] = img[i][j];
+			tmp = 0;
+			cnt = 0;
+		}
+	}
+}
+void makeBinary(int Row, int Col, int rowPos, int colPos, int diameter, double avg, uchar** img, uchar** Result) {
+	int i, j;
+	for (i = 0; i < Row; i++) {
+		for (j = 0; j < Col; j++) {
+			if (isInCircle(i, j, rowPos, colPos, diameter)) {
+				if (img[i][j] > avg) Result[i][j] = 255;	// 원본 이미지의 픽셀 밝기가 평균보다 크면 최대값으로 치환
+				else Result[i][j] = 0;						// 평균보다 작으면 0으로 치환
+			}
+			else
+				Result[i][j] = img[i][j];
+		}
+	}
+}
 
 
 
@@ -148,22 +195,26 @@ void mosaic(int Row, int Col, int rowPos, int colPos, int diameter, int Block_si
 int main(int argc, char* argv[]) {
 	uchar** img, ** Result;
 	int Col, Row, sel;
-	int Block_Size, rowPos, colPos, diameter;
+	int Block_size, rowPos, colPos, diameter;
+	double avg;
 	if (argc != 9) { // 
 		fprintf(stderr, "Input Form:\n%s inImage outImage COL ROW Block_size row_pos col_pos diameter\n", argv[0]);
 		exit(0);
 	}
-	/* transform input parameters to integer...*/
+	/******************** transform input parameters to integer...********/
 	Col = atoi(argv[3]);
 	Row = atoi(argv[4]);
-	Block_Size = atoi(argv[5]);
+	Block_size = atoi(argv[5]);
 	rowPos = atoi(argv[6]);
 	colPos = atoi(argv[7]);
 	diameter = atoi(argv[8]);
-	//////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////
+	/******************matrix allocation and read input image************/
 	img = uc_alloc(Col, Row);
 	Result = uc_alloc(Col, Row);
 	read_ucmatrix(Col, Row, img, argv[1]);
+	//////////////////////////////////////////////////////////////////////
+
 	printf("Which effect do you want?\n");
 	printf("1. Negative\n2. Mosaic\n3. Blur\n4. makeBinary\n5. AdaptiveBinary\n");
 	printf("6. PowImg\n7. BitSlicing\n8. MaskOr\n");
@@ -176,8 +227,20 @@ int main(int argc, char* argv[]) {
 		break;
 	case 2:
 		printf("You selected Mosaic.\n");
-		mosaic(Row, Col, rowPos, colPos, diameter, Block_Size, img, Result);
+		mosaic(Row, Col, rowPos, colPos, diameter, Block_size, img, Result);
 		printf("Mosaic process finished.\n");
+		break;
+	case 3:
+		printf("You selected Blur.\n");
+		blur(Row, Col, rowPos, colPos, diameter, Block_size, img, Result);
+		printf("Blur process finished.\n");
+		break;
+	case 4:
+		printf("You selected MakeBinary.\n");
+		avg = average(img, Row, Col, rowPos, colPos, diameter);
+		printf("Average of section : %lf\n", avg);
+		makeBinary(Row, Col, rowPos, colPos, diameter, avg, img, Result);
+		printf("makeBinary process finished.\n");
 		break;
 	}
 
