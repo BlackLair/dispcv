@@ -134,7 +134,9 @@ void getCdfSymmetry(double* cdf, double* targetCdf) {
 	int i, j, temp;
 	for (i = 0; i < 256; i++) {
 		temp = 255 * cdf[i];
-		targetCdf[temp] = cdf[i];
+		printf("temp:%d\n", temp);
+		targetCdf[temp] =(double) i / 255;
+		printf("asdf:%.5lf\n", targetCdf[temp]);
 	}
 	for (i = 1; i < 256; i++) {
 		if (targetCdf[i] < targetCdf[i - 1])
