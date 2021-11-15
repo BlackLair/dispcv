@@ -129,7 +129,17 @@ void getCdf(double* pdf, double* cdf) {
 			cdf[i] += pdf[j];
 		}
 	}
-	printf("cdf[255] = %.8lf\n", cdf[255]);
+}
+void getCdfSymmetry(double* cdf, double* targetCdf) {
+	int i, j, temp;
+	for (i = 0; i < 256; i++) {
+		temp = 255 * cdf[i];
+		targetCdf[temp] = cdf[i];
+	}
+	for (i = 1; i < 256; i++) {
+		if (targetCdf[i] < targetCdf[i - 1])
+			targetCdf[i] = targetCdf[i - 1];
+	}
 }
 /***************************Effect Func*************************************/
 void Negative(int Col, int Row, uchar** img, uchar** Result) { // 밝기 반전 함수
@@ -296,13 +306,31 @@ void HistoMatch(int Row, int Col, uchar** img, int targetRow, int targetCol, uch
 		}
 	}
 }
+void HistoEqual(int Row, int Col, uchar** img, uchar** result) {
+	int i, j, k;
+	double imgPdf[256], imgCdf[256];
+	double targetCdf[256];
+	getPdf(Row, Col, img, imgPdf);
+	getCdf(imgPdf, imgCdf);
+	getCdfSymmetry(imgCdf, targetCdf);
+	for (i = 0; i < Row; i++) {
+		for (j = 0; j < Col; j++) {
+			for (k = 0; k < 256; k++) {
+				if (targetCdf[k] >= imgCdf[img[i][j]]) {
+					result[i][j] = k;
+					break;
+				}
+			}
+		}
+	}
+}
 /********************************Main******************************/
 int main(int argc, char* argv[]) {
 	int sel;
 	int Row, Col, tRow, tCol;
 	int isEnded = 0;
 	uchar** img, ** Result, **target;
-	double value, pdf[256], cdf[256];
+	double value, pdf[256], cdf[256], tcdf[256];
 	char filename[32];
 
 	if (argc != 5) {
@@ -319,7 +347,7 @@ int main(int argc, char* argv[]) {
 	read_ucmatrix(Col, Row, img, argv[1]);
 	printf("적용할 효과를 선택하세요.\n");
 	printf("1. Negative\n2. Mosaic\n3. Blur\n4. makeBinary\n5. AdaptiveBinary\n");
-	printf("6. PowImg\n7. BitSlicing\n8. MaskOr\n9. getPdf\n10. getCdf\n11. HistoMatch\n");
+	printf("6. PowImg\n7. BitSlicing\n8. MaskOr\n9. getPdf\n10. getCdf\n11. HistoMatch\n12. HistoEqual\n");
 	scanf("%d", &sel);
 	switch (sel) {
 	case 1:
@@ -418,6 +446,7 @@ int main(int argc, char* argv[]) {
 		getCdf(pdf, cdf);
 		makeDiagram(cdf, argv[4]);
 		isEnded = 1;
+		printf("작업 종료\n");
 		break;
 	case 11:
 		printf("타겟 이미지 이름을 입력하세요.\n");
@@ -426,11 +455,16 @@ int main(int argc, char* argv[]) {
 		printf("타겟 이미지 행, 열 수를 입력하세요.\n");
 		scanf("%d %d", &tRow, &tCol);
 		target = uc_alloc(tRow, tCol);
-		printf("타겟 이미지 : %s\n행:%d 열:%d\n", filename, tRow, tCol);
+		printf("HistoMatch 시작.\n");
 		read_ucmatrix(tRow, tCol, target, filename);
 		HistoMatch(Row, Col, img, tRow, tCol, target, Result);
 		printf("작업 종료\n");
 		uc_free(tRow, tCol, target);
+		break;
+	case 12:
+		printf("HistoEqual(히스토그램 평활화) 시작.\n");
+		HistoEqual(Row, Col, img, Result);
+		printf("작업 종료\n");
 		break;
 	default:
 		printf("없는 선택지입니다. 프로그램 종료\n");
