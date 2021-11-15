@@ -91,6 +91,46 @@ void Circle(uchar** Result, int Row, int Col, double diameter) {
 		}
 	}
 }
+void getPdf(int Row, int Col, uchar** img, double* pdf) {
+	int i, j, sum=0;
+	
+	for (i = 0; i < 256; i++)
+		pdf[i] = 0;
+	
+	for (i = 0; i < Row; i++) {
+		for (j = 0; j < Col; j++) {
+			pdf[img[i][j]]+=1;
+		}
+	}
+	for (i = 0; i < 256; i++) {
+		sum+=pdf[i];
+	}
+	for (i = 0; i < 256; i++) {
+		pdf[i] = (pdf[i] / sum);
+	}
+}
+void setPdfforDiagram(double* pdf) {
+	double max = 0;
+	int i;
+	for (i = 0; i < 256; i++) {
+		if (pdf[i] > max)
+			max = pdf[i];
+	}
+	for (i = 0; i < 256; i++) {
+		pdf[i] = (pdf[i] / max);
+	}
+}
+void getCdf(double* pdf, double* cdf) {
+	int i, j;
+
+	for (i = 0; i < 256; i++) {
+		cdf[i] = 0;
+		for (j = 0; j<=i; j++) {
+			cdf[i] += pdf[j];
+		}
+	}
+	printf("cdf[255] = %.8lf\n", cdf[255]);
+}
 /***************************Effect Func*************************************/
 void Negative(int Col, int Row, uchar** img, uchar** Result) { // 밝기 반전 함수
 	int i, j;
@@ -222,13 +262,48 @@ void MaskOr(uchar** in1Img, uchar** in2Img, uchar** outImg, int ROW, int COL) {
 		}
 	}
 }
+void makeDiagram(double* diagram, const char* filename) {
+	int i, j;
+	uchar** result;
+	result = uc_alloc(256, 256);
+	for (j = 0; j < 256; j++) {
+		for (i = 255; i > -1; i--) {
+			if (diagram[j] * 255 > 255 - i)
+				result[i][j] = 255;
+			else
+				result[i][j] = 0;
+		}
+	}
+	write_ucmatrix(256, 256, result, filename);
+	uc_free(256, 256, result);
+}
+void HistoMatch(int Row, int Col, uchar** img, int targetRow, int targetCol, uchar** target, uchar** result) {
+	double imgCdf[256], targetCdf[256];
+	double imgPdf[256], targetPdf[256];
+	int i, j, k;
+	getPdf(Row, Col, img, imgPdf);
+	getPdf(targetRow, targetCol, target, targetPdf);
+	getCdf(imgPdf, imgCdf);
+	getCdf(targetPdf, targetCdf);
+	for (i = 0; i < Row; i++) {
+		for (j = 0; j < Col; j++) {
+			for (k = 0; k < 256; k++) {
+				if (targetCdf[k]>=imgCdf[img[i][j]]) {
+					result[i][j] = k;
+					break;
+				}
+			}
+		}
+	}
+}
 /********************************Main******************************/
 int main(int argc, char* argv[]) {
 	int sel;
-	int Col, Row;
+	int Row, Col, tRow, tCol;
 	int isEnded = 0;
-	uchar** img, ** Result;
-	double value;
+	uchar** img, ** Result, **target;
+	double value, pdf[256], cdf[256];
+	char filename[32];
 
 	if (argc != 5) {
 		fprintf(stderr, "\n %s InputImg x-size y-size ResultImg!!\n", argv[0]);
@@ -244,7 +319,7 @@ int main(int argc, char* argv[]) {
 	read_ucmatrix(Col, Row, img, argv[1]);
 	printf("적용할 효과를 선택하세요.\n");
 	printf("1. Negative\n2. Mosaic\n3. Blur\n4. makeBinary\n5. AdaptiveBinary\n");
-	printf("6. PowImg\n7. BitSlicing\n8. MaskOr\n");
+	printf("6. PowImg\n7. BitSlicing\n8. MaskOr\n9. getPdf\n10. getCdf\n11. HistoMatch\n");
 	scanf("%d", &sel);
 	switch (sel) {
 	case 1:
@@ -328,6 +403,34 @@ int main(int argc, char* argv[]) {
 		Circle(Result, Row, Col, value);
 		MaskOr(img, Result, Result, Row, Col);
 		printf("작업 종료\n");
+		break;
+	case 9:
+		printf("Pdf 이미지 생성 시작.(256 * 256)\n");
+		getPdf(Row, Col, img, pdf);
+		setPdfforDiagram(pdf);
+		makeDiagram(pdf, argv[4]);
+		printf("작업 종료\n");
+		isEnded = 1;
+		break;
+	case 10:
+		printf("Cdf 이미지 생성 시작.(256 * 256)\n");
+		getPdf(Row, Col, img, pdf);
+		getCdf(pdf, cdf);
+		makeDiagram(cdf, argv[4]);
+		isEnded = 1;
+		break;
+	case 11:
+		printf("타겟 이미지 이름을 입력하세요.\n");
+		while (getchar() != '\n');
+		gets(filename);
+		printf("타겟 이미지 행, 열 수를 입력하세요.\n");
+		scanf("%d %d", &tRow, &tCol);
+		target = uc_alloc(tRow, tCol);
+		printf("타겟 이미지 : %s\n행:%d 열:%d\n", filename, tRow, tCol);
+		read_ucmatrix(tRow, tCol, target, filename);
+		HistoMatch(Row, Col, img, tRow, tCol, target, Result);
+		printf("작업 종료\n");
+		uc_free(tRow, tCol, target);
 		break;
 	default:
 		printf("없는 선택지입니다. 프로그램 종료\n");
