@@ -91,58 +91,58 @@ void Circle(uchar** Result, int Row, int Col, double diameter) {
 		}
 	}
 }
-void getPdf(int Row, int Col, uchar** img, double* pdf) {
+void getPdf(int Row, int Col, uchar** img, double* pdf) { // 히스토그램(pdf) 구하기
 	int i, j, sum=0;
 	
-	for (i = 0; i < 256; i++)
+	for (i = 0; i < 256; i++) // 메모리 초기화
 		pdf[i] = 0;
 	
-	for (i = 0; i < Row; i++) {
+	for (i = 0; i < Row; i++) { // 이미지에서 밝기별 픽셀 개수를 셈
 		for (j = 0; j < Col; j++) {
 			pdf[img[i][j]]+=1;
 		}
 	}
-	for (i = 0; i < 256; i++) {
-		sum+=pdf[i];
-	}
-	for (i = 0; i < 256; i++) {
+	sum = Row * Col; // 모든 픽셀 개수 구하기
+	for (i = 0; i < 256; i++) { // 각 밝기별로 픽셀의 개수를 총 픽셀 개수로 나눔
 		pdf[i] = (pdf[i] / sum);
 	}
 }
-void setPdfforDiagram(double* pdf) {
+void setPdfforDiagram(double* pdf) { // pdf를 이미지로 표현하기 위해 픽셀 수가 가장 많은 밝기를 1로 기준으로 하는 데이터 생성
 	double max = 0;
 	int i;
-	for (i = 0; i < 256; i++) {
+	for (i = 0; i < 256; i++) { // 이미지에서 가장 많은 픽셀을 포함한 밝기 값의 확률을 탐색
 		if (pdf[i] > max)
 			max = pdf[i];
 	}
-	for (i = 0; i < 256; i++) {
+	for (i = 0; i < 256; i++) { // 각 확률들을 최댓값으로 나눈 값을 pdf에 넣음
 		pdf[i] = (pdf[i] / max);
-	}
+	} // pdf의 각 데이터들은 0에서 1 사이의 값을 가진다. 가장 큰 값은 무조건 1이 된다.
 }
-void getCdf(double* pdf, double* cdf) {
+void getCdf(double* pdf, double* cdf) { // 확률분포 pdf를이용하여 누적확률분포 cdf를 구함
 	int i, j;
 
 	for (i = 0; i < 256; i++) {
-		cdf[i] = 0;
-		for (j = 0; j<=i; j++) {
-			cdf[i] += pdf[j];
+		cdf[i] = 0;			// 메모리 초기화
+		for (j = 0; j<=i; j++) { 
+			cdf[i] += pdf[j];	// i번째 cdf 값은 0부터 i까지 pdf의 값을 모두 더한 값
 		}
 	}
 }
-void getCdfSymmetry(double* cdf, double* targetCdf) {
+void getCdfSymmetry(double* cdf, double* targetCdf) { // 역함수를 구함(y=x에 대하여 대칭하는 함수 구하기)
 	int i, j, temp;
+	for (i = 0; i < 256; i++)	// 메모리 초기화
+		targetCdf[i] = 0;
 	for (i = 0; i < 256; i++) {
-		temp = 255 * cdf[i];
-		printf("temp:%d\n", temp);
-		targetCdf[temp] =(double) i / 255;
-		printf("asdf:%.5lf\n", targetCdf[temp]);
+		temp = 255 * cdf[i];	// 누적확률 값(0, 1 사이)에 255를 곱해 최소 0, 최대 255가 되도록 한다.
+		targetCdf[temp] =(double) i / 255; // 
 	}
-	for (i = 1; i < 256; i++) {
+	
+	for (i = 1; i < 256; i++) { // CDF는 단조증가함수이므로 함수의 값이 비어있는 곳을 채움
 		if (targetCdf[i] < targetCdf[i - 1])
 			targetCdf[i] = targetCdf[i - 1];
 	}
 }
+
 /***************************Effect Func*************************************/
 void Negative(int Col, int Row, uchar** img, uchar** Result) { // 밝기 반전 함수
 	int i, j;
@@ -274,33 +274,34 @@ void MaskOr(uchar** in1Img, uchar** in2Img, uchar** outImg, int ROW, int COL) {
 		}
 	}
 }
-void makeDiagram(double* diagram, const char* filename) {
+void makeDiagram(double* diagram, const char* filename) { // pdf나 cdf를 그래프 이미지로 변환 및 생성
 	int i, j;
 	uchar** result;
 	result = uc_alloc(256, 256);
 	for (j = 0; j < 256; j++) {
-		for (i = 255; i > -1; i--) {
-			if (diagram[j] * 255 > 255 - i)
+		for (i = 255; i > -1; i--) { // 이미지의 최하단부터 시작
+			if (diagram[j] * 255 >= 255 - i) // 현재 픽셀이 함수 값보다 아래쪽이면 밝기 255
 				result[i][j] = 255;
 			else
-				result[i][j] = 0;
+				result[i][j] = 0;	// 현재 픽셀이 함수값 이상이면 밝기 0
 		}
 	}
 	write_ucmatrix(256, 256, result, filename);
 	uc_free(256, 256, result);
 }
-void HistoMatch(int Row, int Col, uchar** img, int targetRow, int targetCol, uchar** target, uchar** result) {
-	double imgCdf[256], targetCdf[256];
-	double imgPdf[256], targetPdf[256];
+void HistoMatch(int Row, int Col, uchar** img, int targetRow, int targetCol, uchar** target, uchar** result) { // 히스토그램 지정
+	double imgCdf[256], imgPdf[256]; // 원본 이미지 PDF, CDF
+	double targetCdf[256], targetPdf[256]; // 지정 이미지 PDF, CDF
 	int i, j, k;
+	// 원본 이미지와 지정 이미지의 PDF, CDF 각각 구함
 	getPdf(Row, Col, img, imgPdf);
 	getPdf(targetRow, targetCol, target, targetPdf);
 	getCdf(imgPdf, imgCdf);
 	getCdf(targetPdf, targetCdf);
 	for (i = 0; i < Row; i++) {
 		for (j = 0; j < Col; j++) {
-			for (k = 0; k < 256; k++) {
-				if (targetCdf[k]>=imgCdf[img[i][j]]) {
+			for (k = 0; k < 256; k++) { // 지정 이미지 CDF의 앞부터 검사
+				if (targetCdf[k]>=imgCdf[img[i][j]]) { // 원본 이미지 픽셀 밝기의 CDF값과 지정이미지 밝기가 k인 지점 CDF 값이 같아지면 밝기를 k로 변환
 					result[i][j] = k;
 					break;
 				}
@@ -308,13 +309,14 @@ void HistoMatch(int Row, int Col, uchar** img, int targetRow, int targetCol, uch
 		}
 	}
 }
-void HistoEqual(int Row, int Col, uchar** img, uchar** result) {
+void HistoEqual(int Row, int Col, uchar** img, uchar** result) { // 히스토그램 평활화
 	int i, j, k;
 	double imgPdf[256], imgCdf[256];
 	double targetCdf[256];
 	getPdf(Row, Col, img, imgPdf);
 	getCdf(imgPdf, imgCdf);
-	getCdfSymmetry(imgCdf, targetCdf);
+	for (i = 0; i < 256; i++) // 원점과 점 (255, 1)을 연결하는 직선 함수가 targetCDF가 된다.
+		targetCdf[i] = (double)i / 255;
 	for (i = 0; i < Row; i++) {
 		for (j = 0; j < Col; j++) {
 			for (k = 0; k < 256; k++) {
@@ -326,13 +328,31 @@ void HistoEqual(int Row, int Col, uchar** img, uchar** result) {
 		}
 	}
 }
+
+////////////////////////////////////////////////////////////////////
+void makePDFCDFFile(int Row, int Col, uchar** img, double* pdf, double* cdf, char* filename, char* argv) { // PDF, CDF를 이용해 이미지 파일 생성
+	printf("결과 이미지의 PDF, CDF 그래프 생성 시작.\n");
+	getPdf(Row, Col, img, pdf);			// 결과 이미지의 PDF 생성
+	getCdf(pdf, cdf);					// 결과 이미지의 CDF 생성
+	strcpy(filename, argv);
+	strcat(filename, "_CDF");			// CDF 이미지의 파일명 지정
+	makeDiagram(cdf, filename);			// CDF 이미지 파일 생성
+	setPdfforDiagram(pdf);				// PDF 배열을 이미지 생성을 위한 값으로 변환
+	memset(filename, '\0', sizeof(filename));	
+	strcpy(filename, argv);
+	strcat(filename, "_PDF");			// PDF 이미지의 파일명 지정
+	makeDiagram(pdf, filename);			// PDF 이미지 파일 생성
+	printf("생성 종료\n");
+}
+////////////////////////////////////////////////////////////////////
 /********************************Main******************************/
 int main(int argc, char* argv[]) {
 	int sel;
 	int Row, Col, tRow, tCol;
 	int isEnded = 0;
 	uchar** img, ** Result, **target;
-	double value, pdf[256], cdf[256], tcdf[256];
+	double value;
+	double pdf[256], cdf[256], tcdf[256];
 	char filename[32];
 
 	if (argc != 5) {
@@ -430,43 +450,45 @@ int main(int argc, char* argv[]) {
 		printf("원의 반지름 값을 입력하세요.\n");
 		scanf("%lf", &value);
 		printf("MaksOr(or 연산) 시작.( 반지름 : %lf )\n", value);
-		Circle(Result, Row, Col, value);
-		MaskOr(img, Result, Result, Row, Col);
+		Circle(Result, Row, Col, value); // 원의 범위 이내일 경우 255, 밖일 경우 0
+		MaskOr(img, Result, Result, Row, Col); // 원본 영상과 Or 연산 수행
 		printf("작업 종료\n");
 		break;
 	case 9:
 		printf("Pdf 이미지 생성 시작.(256 * 256)\n");
-		getPdf(Row, Col, img, pdf);
-		setPdfforDiagram(pdf);
-		makeDiagram(pdf, argv[4]);
+		getPdf(Row, Col, img, pdf); // PDF값이 저장된 배열 만듦
+		setPdfforDiagram(pdf);		// PDF 그래프 값들의 분포를 보기 쉽게 변환
+		makeDiagram(pdf, argv[4]);	// PDF 그래프 이미지 생성
 		printf("작업 종료\n");
-		isEnded = 1;
+		isEnded = 1;				// 결과 파일이 이미 생성되었으므로 더 생성할 필요 없음을 알림
 		break;
 	case 10:
 		printf("Cdf 이미지 생성 시작.(256 * 256)\n");
-		getPdf(Row, Col, img, pdf);
-		getCdf(pdf, cdf);
-		makeDiagram(cdf, argv[4]);
-		isEnded = 1;
+		getPdf(Row, Col, img, pdf);	// PDF값이 저장된 배열 만듦
+		getCdf(pdf, cdf);			// PDF 함수를 이용해서 CDF를 알아냄
+		makeDiagram(cdf, argv[4]);	// CDF 그래프 이미지 생성
+		isEnded = 1;				// 결과 파일이 이미 생성되었으므로 더 생성할 필요 없음을 알림
 		printf("작업 종료\n");
 		break;
 	case 11:
 		printf("타겟 이미지 이름을 입력하세요.\n");
-		while (getchar() != '\n');
-		gets(filename);
+		while (getchar() != '\n');	// 입력 버퍼 비우기
+		gets(filename);				// 지정 이미지 파일 이름을 입력받음
 		printf("타겟 이미지 행, 열 수를 입력하세요.\n");
-		scanf("%d %d", &tRow, &tCol);
+		scanf("%d %d", &tRow, &tCol);	// 지정 이미지의 크기를 입력함
 		target = uc_alloc(tRow, tCol);
-		printf("HistoMatch 시작.\n");
+		printf("HistoMatch(히스토그램 지정) 시작.\n");
 		read_ucmatrix(tRow, tCol, target, filename);
-		HistoMatch(Row, Col, img, tRow, tCol, target, Result);
+		HistoMatch(Row, Col, img, tRow, tCol, target, Result);	// 원본 이미지의 CDF를 지정 이미지에 Matching
 		printf("작업 종료\n");
-		uc_free(tRow, tCol, target);
+		makePDFCDFFile(Row, Col, Result, pdf, cdf, filename, argv[4]); // 결과 이미지를 이용해 PDF, CDF 그래프 이미지 파일 생성
+		uc_free(tRow, tCol, target);	// 메모리 해제
 		break;
 	case 12:
 		printf("HistoEqual(히스토그램 평활화) 시작.\n");
-		HistoEqual(Row, Col, img, Result);
+		HistoEqual(Row, Col, img, Result);	// 히스토그램 평활화
 		printf("작업 종료\n");
+		makePDFCDFFile(Row, Col, Result, pdf, cdf, filename, argv[4]); // 결과 이미지를 이용해 PDF, CDF 그래프 이미지 파일 생성
 		break;
 	default:
 		printf("없는 선택지입니다. 프로그램 종료\n");
