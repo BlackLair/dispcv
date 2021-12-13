@@ -9,6 +9,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "effect", "mozaiq\mozaiq.vcx
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mid_termDIP", "mid_termDIP\mid_termDIP.vcxproj", "{0FDD96B6-33D2-4F33-AFBF-293ABD67267A}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "finalEXAM", "finalEXAM\finalEXAM.vcxproj", "{D6191F0E-DDBF-4AE6-ADF6-25637A5ADCCC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -41,6 +43,14 @@ Global
 		{0FDD96B6-33D2-4F33-AFBF-293ABD67267A}.Release|x64.Build.0 = Release|x64
 		{0FDD96B6-33D2-4F33-AFBF-293ABD67267A}.Release|x86.ActiveCfg = Release|Win32
 		{0FDD96B6-33D2-4F33-AFBF-293ABD67267A}.Release|x86.Build.0 = Release|Win32
+		{D6191F0E-DDBF-4AE6-ADF6-25637A5ADCCC}.Debug|x64.ActiveCfg = Debug|x64
+		{D6191F0E-DDBF-4AE6-ADF6-25637A5ADCCC}.Debug|x64.Build.0 = Debug|x64
+		{D6191F0E-DDBF-4AE6-ADF6-25637A5ADCCC}.Debug|x86.ActiveCfg = Debug|Win32
+		{D6191F0E-DDBF-4AE6-ADF6-25637A5ADCCC}.Debug|x86.Build.0 = Debug|Win32
+		{D6191F0E-DDBF-4AE6-ADF6-25637A5ADCCC}.Release|x64.ActiveCfg = Release|x64
+		{D6191F0E-DDBF-4AE6-ADF6-25637A5ADCCC}.Release|x64.Build.0 = Release|x64
+		{D6191F0E-DDBF-4AE6-ADF6-25637A5ADCCC}.Release|x86.ActiveCfg = Release|Win32
+		{D6191F0E-DDBF-4AE6-ADF6-25637A5ADCCC}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

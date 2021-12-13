@@ -4,6 +4,7 @@
 #include<assert.h>
 #include<string.h>
 
+#define M_PI 3.14159265358979323846
 #pragma warning(disable:4996)
 
 typedef unsigned char uchar;
@@ -26,7 +27,22 @@ uchar** uc_alloc(int size_x, int size_y) {
 	}
 	return m;
 }
+double** uc_alloc_d(int size_x, int size_y) {
+	double** m;
+	int i;
 
+	if ((m = (double**)calloc(size_y, sizeof(double*))) == NULL) {
+		printf("d_alloc error 1\n");
+		exit(-1);
+	}
+	for (i = 0; i < size_y; i++) {
+		if ((m[i] = (double*)calloc(size_x, sizeof(double))) == NULL) {
+			printf("d_alloc error 2\n");
+			exit(-1);
+		}
+	}
+	return m;
+}
 void uc_free(int size_x, int size_y, uchar** ucmatrix) {
 	int i;
 	for (i = 0; i < size_y; i++)
@@ -77,6 +93,28 @@ double average(uchar** img, int Row, int Col) { // 이미지 전체 픽셀들의
 	}
 	avg = sum / (Row * Col);
 	return avg;
+}
+double getMax_d(double** in, int Row, int Col) {
+	int i, j;
+	double max = -99999999999999999;
+	for (i = 0; i < Row; i++) {
+		for (j = 0; j < Col; j++) {
+			if (in[i][j] > max)
+				max = in[i][j];
+		}
+	}
+	return max;
+}
+double getMin_d(double** in, int Row, int Col) {
+	int i, j;
+	double min = 999999999999999999;
+	for (i = 0; i < Row; i++) {
+		for (j = 0; j < Col; j++) {
+			if (in[i][j] < min)
+				min = in[i][j];
+		}
+	}
+	return min;
 }
 void Circle(uchar** Result, int Row, int Col, double diameter) {
 	int i, j;
@@ -141,6 +179,94 @@ void getCdfSymmetry(double* cdf, double* targetCdf) { // 역함수를 구함(y=x
 		if (targetCdf[i] < targetCdf[i - 1])
 			targetCdf[i] = targetCdf[i - 1];
 	}
+}
+
+double uniform() {
+	return ((double)(rand() & RAND_MAX) / RAND_MAX - 0.5);
+}
+double gaussian() {
+	static int ready = 0;
+	static double gstore;
+	double v1, v2, r, fac, gaus;
+	double uniform();
+
+	if (ready == 0) {
+		do {
+			v1 = 2. * uniform();
+			v2 = 2. * uniform();
+			r = v1 * v1 + v2 * v2;
+		} while (r > 1.0);
+		fac = sqrt(-2. * log(r) / r);
+		gstore = v1 * fac;
+		gaus = v2 * fac;
+		ready = 1;
+	}
+	else {
+		ready = 0;
+		gaus = gstore;
+	}
+	return(gaus);
+}
+int rearrange(double* X, int N) {
+	int i, j, * power_of_2, * pos, stage, num_of_stages = 0;
+	double temp;
+	for (i = N; i > 1; i >>= 1, num_of_stages++); // i값이 1이 될때까지 우측 쉬프팅하고 그 횟수를 num_of_stages에 카운트 < N을 이진수로 나타내면 num_of_stages+1자리
+	if ((power_of_2 = (int*)malloc(sizeof(int) * num_of_stages)) == NULL)
+		return -1;
+	if ((pos = (int*)malloc(sizeof(int) * N)) == NULL)
+		return -1;
+	power_of_2[0] = 1;
+	for (stage = 1; stage < num_of_stages; stage++) // 00000001 00000010 00000100 ...
+		power_of_2[stage] = power_of_2[stage - 1] << 1;
+	for (i = 1; i < N - 1; i++) // pos 값들 0으로 초기화
+		pos[i] = 0;
+	for (i = 1; i < N - 1; i++) { // i 1~N-1
+		if (!pos[i]) {
+			for (j = 0; j < num_of_stages; j++) { // 0~num_of_stages
+				if (i & power_of_2[j])
+					pos[i] += power_of_2[num_of_stages - 1 - j];
+			}
+			temp =X[i];
+			X[i] = X[pos[i]];
+			X[pos[i]] = temp; // X[i], X[pos[i]] swap
+			pos[pos[i]] = 1;
+		}
+	}
+	free(power_of_2);
+	free(pos);
+	return 0;
+}
+void fft(double* X_re, double* X_im, int N) {
+	double X_temp_re, X_temp_im;
+	double phase;
+	int num_of_stages = 0, num_of_elements, num_of_sections, size_of_butterfly;
+	int i, j, stage, m1, m2;
+	for (i = N; i > 1; i >>= 1, num_of_stages++);
+	num_of_elements = N;
+	num_of_sections = 1;
+	size_of_butterfly = N >> 1;
+	for (stage = 0; stage < num_of_stages; stage++) {
+		m1 = 0;
+		m2 = size_of_butterfly;
+		for (i = 0; i < num_of_sections; i++) {
+			for (j = 0; j < size_of_butterfly; j++, m1++, m2++) {
+				X_temp_re = X_re[m1] - X_re[m2];
+				X_temp_im =X_im[m1] - X_im[m2];
+				X_re[m1] = X_re[m1] + X_re[m2];
+				X_im[m1] = X_im[m1] + X_im[m2];
+				phase = -2.0 * M_PI * j / num_of_elements;
+				X_re[m2] =X_temp_re * cos(phase) - X_temp_im * sin(phase);
+				X_im[m2] = X_temp_re * sin(phase) + X_temp_im * cos(phase);
+			}
+			m1 += size_of_butterfly;
+			m2 += size_of_butterfly;
+		}
+		num_of_elements >>= 1;
+		num_of_sections <<= 1;
+		size_of_butterfly >>= 1;
+	}
+	rearrange(X_re, N);
+	rearrange(X_im, N);
 }
 
 /***************************Effect Func*************************************/
@@ -329,6 +455,151 @@ void HistoEqual(int Row, int Col, uchar** img, uchar** result) { // 히스토그
 	}
 }
 
+void addGaussianNoise(int Row, int Col, uchar** img, uchar** result, int value) {
+	int i, j, k;
+	for (i = 0; i < Row; i++) {
+		for (j = 0; j < Col; j++) {
+			result[i][j] = img[i][j];
+			for (k = 0; k < value; k++)
+				result[i][j] += (uchar)gaussian();
+			if (result[i][j] < 0) result[i][j] = 0;
+			else if (result[i][j] > 255) result[i][j] = 255;
+		}
+	}
+}
+
+void myFilter(int Row, int Col, uchar** img, uchar** result, int sel) {
+	double filter[6][9] = { {1. / 9., 1. / 9., 1. / 9., 1. / 9., 1. / 9., 1. / 9., 1. / 9., 1. / 9., 1. / 9.},    // filter[0] : 스무딩필터 [1]:가우시안스무딩 [2]:SobelX [3]:SobelY [4]:laplace [5]:Embossing
+							{1. / 16., 2. / 16., 1. / 16., 2. / 16., 4. / 16., 2. / 16., 1. / 16., 2. / 16., 1. / 16.},
+							{-1, -2, -1, 0, 0, 0, 1, 2, 1},
+							{-1, 0, 1, -2, 0, 2, -1, 0, 1},
+							{0, -1, 0, -1, 4, -1, 0, -1, 0},
+							{-1, 0, 0, 0, 0, 0, 0, 0, 1} };
+	int i, j, k, l, tmpRow, tmpCol;
+	double temp;
+	for (i = 0; i < Row; i++) {
+		for (j = 0; j < Col; j++) {
+			temp = 0;
+			for (k = 0; k < 3; k++) {
+				tmpRow = i - 1 + k;
+				if (tmpRow < 0) tmpRow = 0 - tmpRow;
+				else if (tmpRow >= Row) tmpRow = (2 * Row - tmpRow - 1);
+				for (l = 0; l < 3; l++) {
+					tmpCol = j - 1 + l;
+					if (tmpCol < 0) tmpCol = 0 - tmpCol;
+					else if (tmpCol >= Col) tmpCol = (2*Col-tmpCol-1);
+					temp += (double)img[tmpRow][tmpCol] * filter[sel][k * 3 + l];
+				}
+			}
+			if (temp < 0) temp = 0;
+			else if (temp > 255) temp = 255;
+			result[i][j] = (uchar)temp;
+			if (sel == 5) result[i][j] += 128; // Embossing 양각 효과
+		}
+	}
+}
+void LogImg(int Row, int Col, double** img, uchar** result) {
+	int i, j;
+	double max = -10000000000000000000000.0,
+		min = 999999999999999999999999999.0;
+	double tmp, total;
+
+	for (i = 0; i < Row; i++) {
+		for (j = 0; j < Col; j++) {
+			tmp = (double)img[i][j];
+			if (max < tmp)max = tmp;
+			if (min > tmp)min = tmp;
+		}
+	}
+	total = max - min;
+
+	for (i = 0; i < Row; i++) {
+		for (j = 0; j < Col; j++) {
+			tmp = (((double)img[i][j] - min) / total);
+			tmp *= 255;
+
+			if (tmp > 255) tmp = 255;
+			else if (tmp < 0) tmp = 0;
+			result[i][j] = tmp;
+		}
+	}
+}
+int fft_2d(double** X_re, double** X_im, int N, int Mode) {
+	int i, j;
+	double* temp_re, * temp_im;
+	if ((temp_re = (double*)malloc(sizeof(double) * N)) == NULL)
+		return -1;
+	if ((temp_im = (double*)malloc(sizeof(double) * N)) == NULL)
+		return -1;
+
+	if (Mode == 0) {
+		// Row
+		for (i = 0; i < N; i++) {
+			fft(X_re[i], X_im[i], N);
+		}
+		//Col
+		for (j = 0; j < N; j++) {
+			for (i = 0; i < N; i++) {
+				temp_re[i] =X_re[i][j];
+				temp_im[i] =X_im[i][j];
+			}
+			fft(temp_re, temp_im, N);
+			for (i = 0; i < N; i++) {
+				X_re[i][j] = (double)temp_re[i] / N;
+				X_im[i][j] = (double)temp_im[i] / N;
+			}
+		}
+	}
+	else if (Mode == 1) {
+		// Row
+		for (i = 0; i < N; i++) {
+			fft(X_re[i], X_im[i], N);
+		}
+		//Col
+		for (j = 0; j < N; j++) {
+			for (i = 0; i < N; i++) {
+				temp_re[i] = X_re[i][j];
+				temp_im[i] = X_im[i][j];
+			}
+			fft(temp_re, temp_im, N);
+			for (i = 0; i < N; i++) {
+				X_re[i][j] = (double)temp_re[i] / N;
+				X_im[i][j] = (double)temp_im[i] / N;
+			}
+		}
+	}
+	else if (Mode == 2) {
+		for (i = 0; i < N; i++) {
+			for (j = 0; j < N; j++) {
+				temp_re[j] = (double)X_re[i][j] * pow(-1, j);
+				temp_im[j] = (double)X_im[i][j] * pow(-1, j);
+			}
+			fft(temp_re, temp_im, N);
+			for (j = 0; j < N; j++) {
+				X_re[i][j] = (double)temp_re[j];
+				X_im[i][j] = (double)temp_im[j];
+			}
+		}
+		for (j = 0; j < N; j++) {
+			for (i = 0; i < N; i++) {
+				temp_re[i] =X_re[i][j] * pow(-1, i);
+				temp_im[i] =X_im[i][j] * pow(-1, i);
+			}
+			fft(temp_re, temp_im, N);
+			for (i = 0; i < N; i++) {
+				X_re[i][j] = (double)temp_re[i] / N;
+				X_im[i][j] = (double)temp_im[i] / N;
+			}
+		}
+	}
+	else {
+		printf("invalid selection...\n");
+		return -1;
+	}
+	free(temp_re);
+	free(temp_im);
+	return 0;
+}
 ////////////////////////////////////////////////////////////////////
 void makePDFCDFFile(int Row, int Col, uchar** img, double* pdf, double* cdf, char* filename, char* argv) { // PDF, CDF를 이용해 이미지 파일 생성
 	printf("결과 이미지의 PDF, CDF 그래프 생성 시작.\n");
@@ -350,9 +621,11 @@ int main(int argc, char* argv[]) {
 	int sel;
 	int Row, Col, tRow, tCol;
 	int isEnded = 0;
+	int i, j;
 	uchar** img, ** Result, **target;
 	double value;
 	double pdf[256], cdf[256], tcdf[256];
+	double **X_im, **X_re;
 	char filename[32];
 
 	if (argc != 5) {
@@ -369,7 +642,8 @@ int main(int argc, char* argv[]) {
 	read_ucmatrix(Col, Row, img, argv[1]);
 	printf("적용할 효과를 선택하세요.\n");
 	printf("1. Negative\n2. Mosaic\n3. Blur\n4. makeBinary\n5. AdaptiveBinary\n");
-	printf("6. PowImg\n7. BitSlicing\n8. MaskOr\n9. getPdf\n10. getCdf\n11. HistoMatch\n12. HistoEqual\n");
+	printf("6. PowImg\n7. BitSlicing\n8. MaskOr\n9. getPdf\n10. getCdf\n11. HistoMatch\n12. HistoEqual\n13. addGaussianNoise\n");
+	printf("14. myFilter\n15.LogImg\n16.fft_2d\n");
 	scanf("%d", &sel);
 	switch (sel) {
 	case 1:
@@ -489,6 +763,72 @@ int main(int argc, char* argv[]) {
 		HistoEqual(Row, Col, img, Result);	// 히스토그램 평활화
 		printf("작업 종료\n");
 		makePDFCDFFile(Row, Col, Result, pdf, cdf, filename, argv[4]); // 결과 이미지를 이용해 PDF, CDF 그래프 이미지 파일 생성
+		break;
+	case 13:
+		printf("노이즈를 더할 횟수 입력\n");
+		scanf("%d", &sel);
+		printf("addGaussianNoise(가우시안 잡음) 시작.\n");
+		addGaussianNoise(Row, Col, img, Result, sel);
+		printf("작업 종료\n");
+		break;
+	case 14:
+		printf("필터를 선택하세요.\n");
+		printf("1.Smoothing\n2.Gaussian Smoothing\n3.SobelX\n4.SobelY\n5.Laplace\n6.Embossing\n");
+		scanf("%d", &sel);
+		switch (sel) {
+		case 1:
+			printf("Smoothing 시작\n");
+			break;
+		case 2:
+			printf("Gaussian 시작\n");
+			break;
+		case 3:
+			printf("SobelX 시작\n");
+			break;
+		case 4:
+			printf("SobelY 시작\n");
+			break;
+		case 5:
+			printf("Laplace 시작\n");
+			break;
+		case 6:
+			printf("Embossing 시작\n");
+			break;
+		default:
+			printf("없는 선택지입니다.\n");
+			exit(0);
+			break;
+		}
+
+		myFilter(Row, Col, img, Result, sel -1);
+		printf("작업 종료\n");
+		break;
+	case 15:
+		printf("LogImg 시작\n");
+		LogImg(Row, Col, img, Result);
+		printf("작업 종료\n");
+		break;
+	case 16:
+		X_re = uc_alloc_d(Row, Col);
+		X_im = uc_alloc_d(Row, Col);
+		for (i = 0; i < Row; i++) {
+			for (j = 0; j < Col; j++) {
+				X_im[i][j] = (double)img[i][j];
+			}
+		}
+		printf("Mode 선택... ( 0 ~ 2 )\n");
+		scanf("%d", &sel);
+		printf("fft_2d(고속 푸리에 변환) 시작\n");
+		if (fft_2d(X_re, X_im, Row, sel) == -1) {
+			return -1;
+		}
+		value = getMax_d(X_re, Row, Col);
+		for (i = 0; i < Row; i++)
+			for (j = 0; j < Col; j++) {
+				Result[i][j] = (uchar)((X_re[i][j] / value) * 255);
+			}
+//		LogImg(Row, Col, X_re, Result);
+		printf("작업 종료\n");
 		break;
 	default:
 		printf("없는 선택지입니다. 프로그램 종료\n");
